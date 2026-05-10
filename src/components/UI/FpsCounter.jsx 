@@ -1,0 +1,44 @@
+import { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
+
+export default function FpsCounter() {
+  const [fps, setFps] = useState(60);
+  const framesRef = useRef([]);
+  const lastTimeRef = useRef(performance.now());
+
+  useEffect(() => {
+    let animId;
+    const measure = () => {
+      const now = performance.now();
+      framesRef.current.push(now);
+      while (framesRef.current.length > 0 && framesRef.current[0] <= now - 1000) {
+        framesRef.current.shift();
+      }
+      if (now - lastTimeRef.current >= 500) {
+        setFps(framesRef.current.length);
+        lastTimeRef.current = now;
+      }
+      animId = requestAnimationFrame(measure);
+    };
+    measure();
+    return () => cancelAnimationFrame(animId);
+  }, []);
+
+  const getColor = () => {
+    if (fps >= 55) return 'text-nexus-emerald';
+    if (fps >= 30) return 'text-nexus-amber';
+    return 'text-nexus-crimson';
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="fixed bottom-20 right-3 z-50 rounded-md bg-nexus-deep/80 px-2 py-1 backdrop-blur-sm md:bottom-4"
+    >
+      <span className={`font-mono text-[10px] ${getColor()}`}>
+        {fps} FPS
+      </span>
+    </motion.div>
+  );
+}
